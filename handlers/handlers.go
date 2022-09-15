@@ -3,9 +3,9 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"servergorilla/ent"
-	"servergorilla/validation"
 	"time"
+
+	"github.com/lifehou5e/homework/servergorilla/ent"
 
 	"github.com/google/uuid"
 )
@@ -25,14 +25,8 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		return
 	}
-	if err := validation.PasswordValidation(user.Password); err != nil {
+	if err := user.Validation(user); err != nil {
 		w.WriteHeader(http.StatusUnprocessableEntity)
-		responseErrors["error"] = append(responseErrors["error"], err.Error())
-	}
-	if err := validation.EmailValidation(user.Email); err != nil {
-		responseErrors["error"] = append(responseErrors["error"], err.Error())
-	}
-	if err := validation.FullNameValidation(user.FullName); err != nil {
 		responseErrors["error"] = append(responseErrors["error"], err.Error())
 	}
 

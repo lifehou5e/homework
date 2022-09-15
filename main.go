@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
-	"servergorilla/handlers"
+	"github.com/lifehou5e/homework/servergorilla/handlers"
 
 	"github.com/gorilla/mux"
 )
