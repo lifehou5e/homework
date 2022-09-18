@@ -1,13 +1,17 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/lifehou5e/homework/servergorilla/ent"
 
 	"github.com/google/uuid"
+	_ "github.com/lib/pq"
 )
 
 var (
@@ -40,4 +44,38 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 		succesResone["status"] = "Succes"
 		json.NewEncoder(w).Encode(succesResone)
 	}
+	InsertIntoDB()
+}
+
+func InsertIntoDB() (int, error) {
+	psqInfo := fmt.Sprintf("host=%s port=%d user=%s "+
+		"password=%s dbname=%s sslmode=disable",
+		ent.Host, ent.Port, ent.User, ent.Password, ent.Dbname)
+
+	db, err := sql.Open("postgres", psqInfo)
+	if err != nil {
+		log.Fatal(err)
+		return 0, err
+	}
+	defer db.Close()
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatal(err)
+		return 0, err
+	}
+
+	sqlStatement := `
+INSERT INTO users (email, password, fullname, createdat, updatedat)
+VALUES ($1, $2, $3, $4, $5)
+RETURNING id`
+	id := 0
+	err = db.QueryRow(sqlStatement, "test@gmail.com", "Test Test", "passwordTest", time.Now(), time.Now()).Scan(&id)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("New record ID is:", id)
+	fmt.Println("Success!")
+	return id, nil
+
 }

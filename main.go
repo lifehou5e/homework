@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"net/http"
+
 	"github.com/lifehou5e/homework/servergorilla/handlers"
 
 	"github.com/gorilla/mux"
@@ -11,16 +12,6 @@ import (
 func main() {
 	// init our router
 	r := mux.NewRouter()
-
-	// Some mock data
-	// user = Users{Email: "ololo@gmail.com",
-	// 	Password: "123456789abv",
-	// 	FullName: "Oleh Naumov",
-	// 	ID:       "123214"}
-
-	// fmt.Printf("our firt user is: %+v\n", user)
-
-	// route Handlers / Endpoints
 
 	r.HandleFunc("/users", handlers.CreateUser).Methods("POST")
 
