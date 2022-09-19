@@ -30,6 +30,7 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 		return
 	}
 	if UniqueEmailCheck(user.Email) {
+		w.WriteHeader(http.StatusConflict)
 		responseErrors["error"] = append(responseErrors["error"], "this email already has been taken")
 	}
 	if err := user.Validation(user); err != nil {
@@ -106,6 +107,6 @@ func UniqueEmailCheck(email string) bool {
 	if err != nil {
 		return false
 	}
-	fmt.Println(exist)
+
 	return exist
 }
