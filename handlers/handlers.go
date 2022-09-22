@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -9,6 +8,7 @@ import (
 	"time"
 
 	"github.com/lifehou5e/homework/servergorilla/ent"
+	"github.com/lifehou5e/homework/servergorilla/sqlconn"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
@@ -51,31 +51,14 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 }
 
 func InsertIntoDB(user *ent.Users) (int, error) {
-	psqInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		ent.Host, ent.Port, ent.User, ent.Password, ent.Dbname)
-
-	db, err := sql.Open("postgres", psqInfo)
-	if err != nil {
-		log.Fatal(err)
-		return 0, err
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-		return 0, err
-	}
-
 	sqlStatement := `
-INSERT INTO users (email, password, fullname, createdat, updatedat)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO users (email, password, fullname)
+VALUES ($1, $2, $3)
 RETURNING id`
 	id := 0
-	err = db.QueryRow(sqlStatement, user.Email, user.Password, user.FullName, user.CreatedAt, time.Now()).Scan(&id)
+	err := sqlconn.DB.QueryRow(sqlStatement, user.Email, user.Password, user.FullName).Scan(&id)
 	if err != nil {
-		panic(err)
+		log.Println(err)
 	}
 	fmt.Println("New record ID is:", id)
 	fmt.Println("Success!")
@@ -84,26 +67,9 @@ RETURNING id`
 }
 
 func UniqueEmailCheck(email string) bool {
-	psqInfo := fmt.Sprintf("host=%s port=%d user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		ent.Host, ent.Port, ent.User, ent.Password, ent.Dbname)
-
-	db, err := sql.Open("postgres", psqInfo)
-	if err != nil {
-		log.Fatal(err)
-		return false
-	}
-	defer db.Close()
-
-	err = db.Ping()
-	if err != nil {
-		log.Fatal(err)
-		return false
-	}
-
 	sqlStatement := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
 	var exist bool
-	err = db.QueryRow(sqlStatement, user.Email).Scan(&exist)
+	err := sqlconn.DB.QueryRow(sqlStatement, user.Email).Scan(&exist)
 	if err != nil {
 		return false
 	}

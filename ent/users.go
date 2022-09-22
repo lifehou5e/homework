@@ -10,11 +10,11 @@ import (
 
 type Users struct {
 	ID        uuid.UUID
-	Email     string `json:"email"`
-	Password  string `json:"password"`
-	FullName  string `json:"fullname"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Email     string    `json:"email"`
+	Password  string    `json:"password"`
+	FullName  string    `json:"fullName"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (u *Users) Validation(user Users) error {
