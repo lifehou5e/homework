@@ -1,14 +1,13 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/lifehou5e/homework/servergorilla/ent"
-	"github.com/lifehou5e/homework/servergorilla/sqlconn"
 
 	"github.com/google/uuid"
 	_ "github.com/lib/pq"
@@ -20,7 +19,11 @@ var (
 	succesResponse = make(map[string]string, 0)
 )
 
-func CreateUser(w http.ResponseWriter, req *http.Request) {
+type Env struct {
+	DB *sql.DB
+}
+
+func (env *Env) CreateUser(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-Type", "applictaion/json")
 
 	responseErrors := make(map[string][]string)
@@ -29,7 +32,7 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		return
 	}
-	if UniqueEmailCheck(user.Email) {
+	if env.UniqueEmailCheck(user.Email) {
 		w.WriteHeader(http.StatusConflict)
 		responseErrors["error"] = append(responseErrors["error"], "this email already has been taken")
 	}
@@ -46,30 +49,28 @@ func CreateUser(w http.ResponseWriter, req *http.Request) {
 	} else {
 		succesResponse["status"] = "Succes"
 		json.NewEncoder(w).Encode(succesResponse)
-		InsertIntoDB(&user)
+		env.InsertIntoDB(&user)
 	}
 }
 
-func InsertIntoDB(user *ent.Users) (int, error) {
+func (env *Env) InsertIntoDB(user *ent.Users) error {
 	sqlStatement := `
-INSERT INTO users (email, password, fullname)
-VALUES ($1, $2, $3)
+INSERT INTO users (first_name, last_name, email, password)
+VALUES ($1, $2, $3, $4)
 RETURNING id`
-	id := 0
-	err := sqlconn.DB.QueryRow(sqlStatement, user.Email, user.Password, user.FullName).Scan(&id)
+	err := env.DB.QueryRow(sqlStatement, user.FirstName, user.LastName, user.Email, user.Password)
 	if err != nil {
 		log.Println(err)
 	}
-	fmt.Println("New record ID is:", id)
-	fmt.Println("Success!")
-	return id, nil
 
+	return nil
 }
 
-func UniqueEmailCheck(email string) bool {
+func (env *Env) UniqueEmailCheck(email string) bool {
 	sqlStatement := `SELECT EXISTS(SELECT 1 FROM users WHERE email = $1)`
+
 	var exist bool
-	err := sqlconn.DB.QueryRow(sqlStatement, user.Email).Scan(&exist)
+	err := env.DB.QueryRow(sqlStatement, user.Email).Scan(&exist)
 	if err != nil {
 		return false
 	}
